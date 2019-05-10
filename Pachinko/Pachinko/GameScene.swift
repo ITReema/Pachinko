@@ -10,6 +10,7 @@ import SpriteKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
+    let Balls = ["ballBlue", "ballCyan", "ballGreen", "ballGrey", "ballPurple", "ballRed", "ballYellow"]
     var scoreLabel: SKLabelNode!
     
     var score = 0 {
@@ -27,6 +28,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             } else {
                 editLabel.text = "Edit"
             }
+        }
+    }
+    
+    var ballsLabel: SKLabelNode!
+    
+    var numberOfBalls = 0 {
+        didSet {
+            ballsLabel.text = "Balls: \(numberOfBalls)"
         }
     }
     
@@ -48,6 +57,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         editLabel.text = "Edit"
         editLabel.position = CGPoint(x: 80, y: 700)
         addChild(editLabel)
+        
+        ballsLabel = SKLabelNode(fontNamed: "Chalkduster")
+        ballsLabel.text = "Balls: 0"
+        ballsLabel.horizontalAlignmentMode = .center
+        ballsLabel.position = CGPoint(x: 512, y: 700)
+        addChild(ballsLabel)
         
         physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
         physicsWorld.contactDelegate = self
@@ -88,17 +103,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     addChild(box)
                     
                 } else {
-                    let ball = SKSpriteNode(imageNamed: "ballRed")
+                    let ball = SKSpriteNode(imageNamed: Balls.randomElement() ?? "ballRed")
                     ball.physicsBody = SKPhysicsBody(circleOfRadius: ball.size.width / 2.0)
                     ball.physicsBody?.restitution = 0.4
                     ball.physicsBody!.contactTestBitMask = ball.physicsBody!.collisionBitMask
-                    ball.position = location
+                    ball.position = CGPoint(x: location.x, y: 768)
                     ball.name = "ball"
+                    
+                    if numberOfBalls >= 5 {
+                        if let fireParticles = SKEmitterNode(fileNamed: "FireParticles") {
+                            fireParticles.position = location
+                            addChild(fireParticles)
+                        }
+                        return
+                    }
+                    numberOfBalls += 1
+                    
                     addChild(ball)
-                }
             }
             
         }
+    }
     }
     
     func makeBouncer(at position: CGPoint){
@@ -151,6 +176,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func destroy(ball: SKNode) {
+        if let fireParticles = SKEmitterNode(fileNamed: "FireParticles") {
+            fireParticles.position = ball.position
+            addChild(fireParticles)
+        }
+        
         ball.removeFromParent()
     }
     
